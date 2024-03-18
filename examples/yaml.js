@@ -3,6 +3,7 @@ const k8srm = require('../src');
 const main = async () => {
     const manifest = new k8srm.Manifest();
 
+    // Add inline resource
     manifest.add({
         apiVersion: 'v1',
         kind: 'Namespace',
@@ -10,8 +11,11 @@ const main = async () => {
             name: 'test'
         }
     });
+
+    // Load whole YAML file
     manifest.add(await k8srm.loadYamlFile('./examples/mysql.yaml'));
 
+    // Apply namespace name to all non-namespace resources
     manifest.update(item => {
         if (item.kind != 'Namespace') {
             return {
@@ -22,6 +26,7 @@ const main = async () => {
         }
     });
 
+    // Change the name of all non-namespace resources
     manifest.update(item => {
         if (item.kind != 'Namespace') {
             return {
@@ -32,7 +37,8 @@ const main = async () => {
         }
     });
 
-    manifest.update(item => {
+    // Use proper labels for all resources
+    manifest.update(_ => {
         namespace = manifest.get('Namespace', 'test').metadata.name;
         return {
             metadata: {
@@ -44,6 +50,8 @@ const main = async () => {
             }
         };
     });
+
+    // Print YAML output to stdout
     console.log(manifest.yaml);
 };
 
